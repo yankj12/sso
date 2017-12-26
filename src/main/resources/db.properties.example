@@ -1,0 +1,10 @@
+
+# mongodb
+ip=localhost
+port=27017
+# database is the database which to connecte
+database=test
+# dbUserDefined is the name of the database in which the user is defined
+dbUserDefined=teste
+user=test
+password=test
