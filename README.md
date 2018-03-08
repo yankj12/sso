@@ -36,9 +36,10 @@ API-2 checkUserAuth 判断用户名密码是否正确:
 	errorMsg:''
 }
 
-API-3 invalidate 让session失效：
- 
+API-3 updateActiveTime 每次页面活动，调用接口更新下上次操作时间（这个api待确认）
 
+
+API-4 invalidate 让session失效：
 
 接口数据日志：采用log4j
 
