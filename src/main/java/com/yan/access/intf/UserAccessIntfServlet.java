@@ -54,6 +54,8 @@ public class UserAccessIntfServlet  extends HttpServlet {
 				responseVo = this.checkUserAuth(httpSession, userMongoDaoUtil, userCode, pwdhash);
 			}else if("getSession".equals(intfCode.trim())) {
 				responseVo = this.getSession(httpSession, sessID);
+			}else if("invalidateSession".equals(intfCode.trim())) {
+				responseVo = this.invalidateSession(httpSession, sessID);
 			}
 		}
 		
@@ -153,4 +155,31 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		return responseVo;
 	}
 	
+	/**
+	 * API-4 invalidate 让session失效
+	 * @param httpSession
+	 * @param userCode
+	 * @return
+	 */
+	private ResponseVo invalidateSession(HttpSession httpSession, String userCode) {
+		String sessID = httpSession.getId();
+		
+		ResponseVo responseVo = new ResponseVo();
+		UserMsgInfo userMsgInfo = new UserMsgInfo();
+		boolean success = false;
+		String errorMsg = null;
+		
+		//从session中获取userCode
+		if(httpSession != null){
+			if(httpSession.getAttribute(sessID) != null){
+				userMsgInfo = (UserMsgInfo)httpSession.getAttribute(sessID);
+			}
+			httpSession.removeAttribute(sessID);
+		}
+		
+		responseVo.setSuccess(success);
+		responseVo.setErrorMsg(errorMsg);
+		responseVo.setUserMsgInfo(userMsgInfo);
+		return responseVo;
+	}
 }
