@@ -1,4 +1,4 @@
-package com.yan.common.mongo.util;
+package com.yan.common.mongo;
 
 public class MongoDBConfig {
 

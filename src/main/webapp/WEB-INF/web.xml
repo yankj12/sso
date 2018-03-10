@@ -14,12 +14,12 @@
     </listener>
   
 	<servlet>
-        <servlet-name>CodeSelectIntfServlet</servlet-name>
-        <servlet-class>com.yan.workreport.intf.CodeSelectIntfServlet</servlet-class>
+        <servlet-name>UserAccessIntfServlet</servlet-name>
+        <servlet-class>com.yan.access.intf.UserAccessIntfServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>CodeSelectIntfServlet</servlet-name>
-        <url-pattern>/CodeSelectIntfServlet</url-pattern>
+        <servlet-name>UserAccessIntfServlet</servlet-name>
+        <url-pattern>/UserAccessIntfServlet</url-pattern>
     </servlet-mapping>
     
 </web-app>

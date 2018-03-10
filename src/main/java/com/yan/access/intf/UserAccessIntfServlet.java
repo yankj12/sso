@@ -2,8 +2,9 @@ package com.yan.access.intf;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -17,7 +18,9 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.yan.access.dao.UserMongoDaoUtil;
-import com.yan.access.intf.vo.SelectOptionVo;
+import com.yan.access.intf.vo.ResponseVo;
+import com.yan.access.model.User;
+import com.yan.access.vo.UserMsgInfo;
 
 public class UserAccessIntfServlet  extends HttpServlet {
 
@@ -27,6 +30,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 			throws ServletException, IOException {
 		
 		HttpSession httpSession = request.getSession();
+		String sessID = request.getSession().getId();
 		
 		//获取ServletContext 再获取 WebApplicationContextUtils  
         ServletContext servletContext = this.getServletContext();  
@@ -35,82 +39,27 @@ public class UserAccessIntfServlet  extends HttpServlet {
         UserMongoDaoUtil userMongoDaoUtil = (UserMongoDaoUtil) context.getBean("userMongoDaoUtil"); 
 		
 		//获取入参
-		String codeType = request.getParameter("intfCode");
-		String codeCode = request.getParameter("userCode");
-		String required = request.getParameter("passwordMD5");
-		String selected = request.getParameter("selected");
-		//从数据库查询
-		List<SelectOptionVo> list = new ArrayList<SelectOptionVo>();
+		String intfCode = request.getParameter("intfCode");
+		String userCode = request.getParameter("userCode");
+		String pwdhash = request.getParameter("pwdhash");
+		String ip = request.getRemoteAddr();
 		
-		if(codeType != null && !"".equals(codeType.trim())){
+		// 定义返回
+		ResponseVo responseVo = new ResponseVo();
+		responseVo.setSuccess(false);
+		responseVo.setErrorMsg("check parameters.");
+		if(intfCode != null) {
 			
-			//TransCodeMongoDaoUtil transCodeMongoDaoUtil = new TransCodeMongoDaoUtil();
-			List<TransCode> transCodes = null;
-			transCodes = transCodeMongoDaoUtil.findTransCodeDocumentsByCodeTypeAndValidStatus(codeType, "1");
-			
-			TransCode transCode = null;
-			List<CodeEntry> codeEntries = null;
-			if(transCodes != null && transCodes.size() > 0) {
-				transCode = transCodes.get(0);
-				
-				if(codeCode != null && !"".equals(codeCode.trim())){
-					//如果codecode不为空，说明是代码翻译接口，需要找到对应codecode
-					if(transCode.getTrans() != null) {
-						for(CodeEntry code:transCode.getTrans()){
-							if(code != null && code.getCodeCode() != null 
-									&& codeCode.trim().equals(code.getCodeCode().trim())) {
-								codeEntries = new ArrayList<>(1);
-								codeEntries.add(code);
-								break;
-							}
-						}
-					}
-				}else{
-					//codecode为空，说明是代码选择接口
-					codeEntries = transCode.getTrans();
-				}
+			if("checkUserAuth".equals(intfCode.trim())) {
+				responseVo = this.checkUserAuth(httpSession, userMongoDaoUtil, userCode, pwdhash);
+			}else if("getSession".equals(intfCode.trim())) {
+				responseVo = this.getSession(httpSession, sessID);
 			}
-			
-			
-			if(codeEntries != null && codeEntries.size() > 0){
-				for(CodeEntry code:codeEntries){
-					SelectOptionVo optionVo = new SelectOptionVo();
-					optionVo.setValue(code.getCodeCode());
-					optionVo.setLabel(code.getCodeValue());
-					
-					if(selected != null && code.getCodeCode() != null
-							&& selected.trim().equals(code.getCodeCode().trim())){
-						optionVo.setSelected(true);
-					}
-					
-					list.add(optionVo);
-				}
-			}
-			
-			if(required != null && "true".equalsIgnoreCase(required.trim())){
-				//required为true，表示必录，肯定不需要'--'
-			}else{
-				//添加一个"请选择"
-				SelectOptionVo optionVo = new SelectOptionVo();
-				optionVo.setLabel("--");
-				optionVo.setValue("");
-				
-				//如果有默认选择的option
-				if(selected != null && !"".equals(selected.trim())){
-					
-				}else{
-					//如果没有默认选择的option，我们才选择一个--为默认
-					optionVo.setSelected(true);
-				}
-				list.add(optionVo);
-			}
-				
-			
 		}
 		
 		//fastjson转换为json
 		//返回json数据
-		String json = JSON.toJSONString(list);
+		String json = JSON.toJSONString(responseVo);
 		
 		response.setCharacterEncoding("UTF-8");
 		response.setContentType("text/html; charset=UTF-8");
@@ -123,4 +72,85 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		//如果在dopost中不调用doget，那么通过post方式请求过来的连接将不会被做任何处理
 		doGet(request, response);
 	}
+	
+	/**
+	 * API-1 getSession 根据sessionId获取session
+	 * @param httpSession
+	 * @param sessID
+	 * @return
+	 */
+	private ResponseVo getSession(HttpSession httpSession, String sessID) {
+		ResponseVo responseVo = new ResponseVo();
+		boolean success = false;
+		String errorMsg = null;
+		UserMsgInfo userMsgInfo = (UserMsgInfo)httpSession.getAttribute(sessID);
+		if(userMsgInfo != null) {
+			success = true;
+		}else {
+			success = false;
+		}
+		responseVo.setSuccess(success);
+		responseVo.setErrorMsg(errorMsg);
+		responseVo.setUserMsgInfo(userMsgInfo);
+		return responseVo;
+	}
+	
+	/**
+	 * API-2 checkUserAuth 判断用户名密码是否正确
+	 * @param httpSession
+	 * @param userMongoDaoUtil
+	 * @param userCode
+	 * @param pwdhash
+	 * @return
+	 */
+	private ResponseVo checkUserAuth(HttpSession httpSession, UserMongoDaoUtil userMongoDaoUtil, String userCode, String pwdhash) {
+		
+		String sessID = httpSession.getId();
+		
+		ResponseVo responseVo = new ResponseVo();
+		UserMsgInfo userMsgInfo = new UserMsgInfo();
+		boolean success = false;
+		String errorMsg = null;
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("userCode", userCode);
+		map.put("pswd", pwdhash);
+		map.put("validStatus", "1");    //只查询有效用户
+		map.put("auditStatus", "2");    //只查询审批通过用户
+		
+		
+		List<User> users = userMongoDaoUtil.findUserDocumentsByCondition(map);
+		
+		
+		User user = null;
+		if(users != null && users.size() == 1){
+			user = users.get(0);
+		}
+		
+		//根据userCode和password去库里查
+		//User user = userService.findUserByPK(userCode);
+		
+		//查到有数据，则向session中加入
+		if(user != null){
+			userMsgInfo = new UserMsgInfo();
+			userMsgInfo.setUserCode(user.getUserCode());
+			userMsgInfo.setUserCName(user.getUserName());
+			userMsgInfo.setEmail(user.getEmail());
+			//userMsgInfo.setTeamCode(user.getTeam());
+			//userMsgInfo.setIp(ip);
+			
+			httpSession.setAttribute(sessID, userMsgInfo);
+			success = true;
+		}else{
+			//没有查到数据，则跳转到登陆界面
+			errorMsg = "用户名或密码不正确！";
+			success = false;
+		}
+		
+		responseVo.setSuccess(success);
+		responseVo.setErrorMsg(errorMsg);
+		responseVo.setUserMsgInfo(userMsgInfo);
+		return responseVo;
+	}
+	
 }

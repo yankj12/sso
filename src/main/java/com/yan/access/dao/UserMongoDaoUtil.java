@@ -18,7 +18,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.yan.access.model.User;
-import com.yan.common.mongo.util.MongoDBConfig;
+import com.yan.common.mongo.MongoDBConfig;
 import com.yan.common.mongo.util.SchameDocumentUtil;
 
 public class UserMongoDaoUtil {
