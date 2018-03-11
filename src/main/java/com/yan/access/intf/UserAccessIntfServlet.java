@@ -30,7 +30,6 @@ public class UserAccessIntfServlet  extends HttpServlet {
 			throws ServletException, IOException {
 		
 		HttpSession httpSession = request.getSession();
-		String sessID = request.getSession().getId();
 		
 		//获取ServletContext 再获取 WebApplicationContextUtils  
         ServletContext servletContext = this.getServletContext();  
@@ -42,6 +41,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		String intfCode = request.getParameter("intfCode");
 		String userCode = request.getParameter("userCode");
 		String pwdhash = request.getParameter("pwdhash");
+		String sessID = request.getParameter("sessID");
 		String ip = request.getRemoteAddr();
 		
 		// 定义返回
@@ -51,7 +51,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		if(intfCode != null) {
 			
 			if("checkUserAuth".equals(intfCode.trim())) {
-				responseVo = this.checkUserAuth(httpSession, userMongoDaoUtil, userCode, pwdhash);
+				responseVo = this.checkUserAuth(httpSession, userMongoDaoUtil, userCode, pwdhash, sessID);
 			}else if("getSession".equals(intfCode.trim())) {
 				responseVo = this.getSession(httpSession, sessID);
 			}else if("invalidateSession".equals(intfCode.trim())) {
@@ -105,9 +105,9 @@ public class UserAccessIntfServlet  extends HttpServlet {
 	 * @param pwdhash
 	 * @return
 	 */
-	private ResponseVo checkUserAuth(HttpSession httpSession, UserMongoDaoUtil userMongoDaoUtil, String userCode, String pwdhash) {
+	private ResponseVo checkUserAuth(HttpSession httpSession, UserMongoDaoUtil userMongoDaoUtil, String userCode, String pwdhash, String sessID) {
 		
-		String sessID = httpSession.getId();
+		String sessID2 = httpSession.getId();
 		
 		ResponseVo responseVo = new ResponseVo();
 		UserMsgInfo userMsgInfo = new UserMsgInfo();
@@ -161,8 +161,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 	 * @param userCode
 	 * @return
 	 */
-	private ResponseVo invalidateSession(HttpSession httpSession, String userCode) {
-		String sessID = httpSession.getId();
+	private ResponseVo invalidateSession(HttpSession httpSession, String sessID) {
 		
 		ResponseVo responseVo = new ResponseVo();
 		UserMsgInfo userMsgInfo = new UserMsgInfo();
