@@ -41,7 +41,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		String intfCode = request.getParameter("intfCode");
 		String userCode = request.getParameter("userCode");
 		String pwdhash = request.getParameter("pwdhash");
-		String sessID = request.getParameter("sessID");
+		String ticket = request.getParameter("ticket");
 		String ip = request.getRemoteAddr();
 		
 		// 定义返回
@@ -51,11 +51,11 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		if(intfCode != null) {
 			
 			if("checkUserAuth".equals(intfCode.trim())) {
-				responseVo = this.checkUserAuth(httpSession, userMongoDaoUtil, userCode, pwdhash, sessID);
+				responseVo = this.checkUserAuth(httpSession, userMongoDaoUtil, userCode, pwdhash, ticket);
 			}else if("getSession".equals(intfCode.trim())) {
-				responseVo = this.getSession(httpSession, sessID);
+				responseVo = this.getSession(httpSession, ticket);
 			}else if("invalidateSession".equals(intfCode.trim())) {
-				responseVo = this.invalidateSession(httpSession, sessID);
+				responseVo = this.invalidateSession(httpSession, ticket);
 			}
 		}
 		
@@ -105,9 +105,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 	 * @param pwdhash
 	 * @return
 	 */
-	private ResponseVo checkUserAuth(HttpSession httpSession, UserMongoDaoUtil userMongoDaoUtil, String userCode, String pwdhash, String sessID) {
-		
-		String sessID2 = httpSession.getId();
+	private ResponseVo checkUserAuth(HttpSession httpSession, UserMongoDaoUtil userMongoDaoUtil, String userCode, String pwdhash, String ticket) {
 		
 		ResponseVo responseVo = new ResponseVo();
 		UserMsgInfo userMsgInfo = new UserMsgInfo();
@@ -141,7 +139,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 			//userMsgInfo.setTeamCode(user.getTeam());
 			//userMsgInfo.setIp(ip);
 			
-			httpSession.setAttribute(sessID, userMsgInfo);
+			httpSession.setAttribute(ticket, userMsgInfo);
 			success = true;
 		}else{
 			//没有查到数据，则跳转到登陆界面
@@ -161,7 +159,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 	 * @param userCode
 	 * @return
 	 */
-	private ResponseVo invalidateSession(HttpSession httpSession, String sessID) {
+	private ResponseVo invalidateSession(HttpSession httpSession, String ticket) {
 		
 		ResponseVo responseVo = new ResponseVo();
 		UserMsgInfo userMsgInfo = new UserMsgInfo();
@@ -170,10 +168,10 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		
 		//从session中获取userCode
 		if(httpSession != null){
-			if(httpSession.getAttribute(sessID) != null){
-				userMsgInfo = (UserMsgInfo)httpSession.getAttribute(sessID);
+			if(httpSession.getAttribute(ticket) != null){
+				userMsgInfo = (UserMsgInfo)httpSession.getAttribute(ticket);
 			}
-			httpSession.removeAttribute(sessID);
+			httpSession.removeAttribute(ticket);
 		}
 		
 		responseVo.setSuccess(success);
