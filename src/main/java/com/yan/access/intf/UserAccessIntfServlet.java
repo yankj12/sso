@@ -20,11 +20,15 @@ import com.alibaba.fastjson.JSON;
 import com.yan.access.dao.UserMongoDaoUtil;
 import com.yan.access.intf.vo.ResponseVo;
 import com.yan.access.model.User;
+import com.yan.access.service.facade.RedisSessionService;
 import com.yan.access.vo.UserMsgInfo;
 
 public class UserAccessIntfServlet  extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
+	
+	// redis session 失效时间，默认20分钟
+	public static final int REDIS_SESSION_EXPIRE_SECOND = 20 * 60;
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -36,7 +40,8 @@ public class UserAccessIntfServlet  extends HttpServlet {
         WebApplicationContext context =   
                 WebApplicationContextUtils.getWebApplicationContext(servletContext);  
         UserMongoDaoUtil userMongoDaoUtil = (UserMongoDaoUtil) context.getBean("userMongoDaoUtil"); 
-		
+        RedisSessionService redisSessionService = (RedisSessionService)context.getBean("redisSessionService"); 
+        
 		//获取入参
 		String intfCode = request.getParameter("intfCode");
 		String userCode = request.getParameter("userCode");
@@ -51,11 +56,17 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		if(intfCode != null) {
 			
 			if("checkUserAuth".equals(intfCode.trim())) {
-				responseVo = this.checkUserAuth(httpSession, userMongoDaoUtil, userCode, pwdhash, ticket);
+				responseVo = this.checkUserAuth(redisSessionService, userMongoDaoUtil, userCode, pwdhash, ticket);
+				if(responseVo.isSuccess()){
+					redisSessionService.extendRedisSessionExpireTime(ticket, REDIS_SESSION_EXPIRE_SECOND);
+				}
 			}else if("getSession".equals(intfCode.trim())) {
-				responseVo = this.getSession(httpSession, ticket);
+				responseVo = this.getSession(redisSessionService, ticket);
+				if(responseVo.isSuccess()){
+					redisSessionService.extendRedisSessionExpireTime(ticket, REDIS_SESSION_EXPIRE_SECOND);
+				}
 			}else if("invalidateSession".equals(intfCode.trim())) {
-				responseVo = this.invalidateSession(httpSession, ticket);
+				responseVo = this.invalidateSession(redisSessionService, ticket);
 			}
 		}
 		
@@ -77,15 +88,15 @@ public class UserAccessIntfServlet  extends HttpServlet {
 	
 	/**
 	 * API-1 getSession 根据sessionId获取session
-	 * @param httpSession
+	 * @param redisSessionService
 	 * @param sessID
 	 * @return
 	 */
-	private ResponseVo getSession(HttpSession httpSession, String sessID) {
+	private ResponseVo getSession(RedisSessionService redisSessionService, String ticket) {
 		ResponseVo responseVo = new ResponseVo();
 		boolean success = false;
 		String errorMsg = null;
-		UserMsgInfo userMsgInfo = (UserMsgInfo)httpSession.getAttribute(sessID);
+		UserMsgInfo userMsgInfo = redisSessionService.findUserMsgInfoFromRedisSession(ticket);
 		if(userMsgInfo != null) {
 			success = true;
 		}else {
@@ -99,13 +110,13 @@ public class UserAccessIntfServlet  extends HttpServlet {
 	
 	/**
 	 * API-2 checkUserAuth 判断用户名密码是否正确
-	 * @param httpSession
+	 * @param redisSessionService
 	 * @param userMongoDaoUtil
 	 * @param userCode
 	 * @param pwdhash
 	 * @return
 	 */
-	private ResponseVo checkUserAuth(HttpSession httpSession, UserMongoDaoUtil userMongoDaoUtil, String userCode, String pwdhash, String ticket) {
+	private ResponseVo checkUserAuth(RedisSessionService redisSessionService, UserMongoDaoUtil userMongoDaoUtil, String userCode, String pwdhash, String ticket) {
 		
 		ResponseVo responseVo = new ResponseVo();
 		UserMsgInfo userMsgInfo = new UserMsgInfo();
@@ -139,8 +150,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 			//userMsgInfo.setTeamCode(user.getTeam());
 			//userMsgInfo.setIp(ip);
 			
-			httpSession.setAttribute(ticket, userMsgInfo);
-			success = true;
+			success = redisSessionService.insertUserMsgInfoToRedisSession(ticket, userMsgInfo, REDIS_SESSION_EXPIRE_SECOND);
 		}else{
 			//没有查到数据，则跳转到登陆界面
 			errorMsg = "用户名或密码不正确！";
@@ -155,11 +165,11 @@ public class UserAccessIntfServlet  extends HttpServlet {
 	
 	/**
 	 * API-4 invalidate 让session失效
-	 * @param httpSession
+	 * @param redisSessionService
 	 * @param userCode
 	 * @return
 	 */
-	private ResponseVo invalidateSession(HttpSession httpSession, String ticket) {
+	private ResponseVo invalidateSession(RedisSessionService redisSessionService, String ticket) {
 		
 		ResponseVo responseVo = new ResponseVo();
 		UserMsgInfo userMsgInfo = new UserMsgInfo();
@@ -167,12 +177,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		String errorMsg = null;
 		
 		//从session中获取userCode
-		if(httpSession != null){
-			if(httpSession.getAttribute(ticket) != null){
-				userMsgInfo = (UserMsgInfo)httpSession.getAttribute(ticket);
-			}
-			httpSession.removeAttribute(ticket);
-		}
+		success = redisSessionService.deleteRedisSession(ticket);
 		
 		responseVo.setSuccess(success);
 		responseVo.setErrorMsg(errorMsg);

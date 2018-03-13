@@ -19,12 +19,21 @@
 	    <property name="password" value="${password}" />
 	</bean> 
     
+    <bean id="redisConfig" class="com.yan.common.redis.RedisConfig">
+	    <property name="ip" value="${ip}" />  
+	    <property name="port" value="${port}" />  
+	</bean> 
+	
     <!-- service -->
     <bean id="userMongoDaoUtil" class="com.yan.access.dao.UserMongoDaoUtil">
     	<property name="dataSource">
 			<ref local="dataSource" />
 		</property>
     </bean>
-    
+    <bean id="redisSessionService" class="com.yan.access.service.spring.RedisSessionServiceImpl">
+    	<property name="redisConfig">
+			<ref local="redisConfig" />
+		</property>
+    </bean>
     
 </beans>
