@@ -20,14 +20,18 @@ public class RedisSessionServiceImpl implements RedisSessionService{
 		try {
 			jedis = new Jedis(redisConfig.getIp(), redisConfig.getPort());
 			
-			userMsgInfo = new UserMsgInfo();
-			
 			Map<String, String> map = jedis.hgetAll(key);
-			userMsgInfo.setUserCode(map.get("userCode"));
-			userMsgInfo.setUserCName(map.get("userCName"));
-			userMsgInfo.setIp(map.get("ip"));
-			userMsgInfo.setEmail(map.get("email"));
-			userMsgInfo.setTeamCode(map.get("teamCode"));
+			
+			// 当redis中没有对应的key的时候，返回的map不为null，而是size为0的map对象
+			if(map != null && map.size() > 0){
+				userMsgInfo = new UserMsgInfo();
+				
+				userMsgInfo.setUserCode(map.get("userCode"));
+				userMsgInfo.setUserCName(map.get("userCName"));
+				userMsgInfo.setIp(map.get("ip"));
+				userMsgInfo.setEmail(map.get("email"));
+				userMsgInfo.setTeamCode(map.get("teamCode"));
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -49,11 +53,21 @@ public class RedisSessionServiceImpl implements RedisSessionService{
 			jedis = new Jedis(redisConfig.getIp(), redisConfig.getPort());
 			
 			// 向redis中存UserMsgInfo的信息
-			jedis.hset(key, "userCode", userMsgInfo.getUserCode());
-			jedis.hset(key, "userCName", userMsgInfo.getUserCName());
-			jedis.hset(key, "ip", userMsgInfo.getIp());
-			jedis.hset(key, "email", userMsgInfo.getEmail());
-			jedis.hset(key, "teamCode", userMsgInfo.getTeamCode());
+			if(userMsgInfo.getUserCode() != null){
+				jedis.hset(key, "userCode", userMsgInfo.getUserCode());
+			}
+			if(userMsgInfo.getUserCName() != null){
+				jedis.hset(key, "userCName", userMsgInfo.getUserCName());
+			}
+			if(userMsgInfo.getIp() != null){
+				jedis.hset(key, "ip", userMsgInfo.getIp());
+			}
+			if(userMsgInfo.getEmail() != null){
+				jedis.hset(key, "email", userMsgInfo.getEmail());
+			}
+			if(userMsgInfo.getTeamCode() != null){
+				jedis.hset(key, "teamCode", userMsgInfo.getTeamCode());
+			}
 			
 			// 设置失效时间
 			jedis.expire(key, expireSecond);
