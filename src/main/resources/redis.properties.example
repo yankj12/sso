@@ -1,4 +1,5 @@
 
 # redis
-ip=localhost
-port=6379
+# key must start with prefix 'redis.' or it will mixed with mongodb.ip
+redis.ip=localhost
+redis.port=6379

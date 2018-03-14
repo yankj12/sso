@@ -1,10 +1,11 @@
 
 # mongodb
-ip=localhost
-port=27017
+# key must start with prefix 'mongodb.' or it will mixed with redis.ip
+mongodb.ip=localhost
+mongodb.port=27017
 # database is the database which to connecte
-database=test
+mongodb.database=test
 # dbUserDefined is the name of the database in which the user is defined
-dbUserDefined=teste
-user=test
-password=test
+mongodb.dbUserDefined=teste
+mongodb.user=test
+mongodb.password=test

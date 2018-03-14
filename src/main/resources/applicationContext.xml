@@ -11,17 +11,17 @@
     <!-- <context:property-placeholder location="WEB-INF/classes/db.properties" ignore-unresolvable="true"/>  -->
 
 	<bean id="dataSource" class="com.yan.common.mongo.MongoDBConfig">
-	    <property name="ip" value="${ip}" />  
-	    <property name="port" value="${port}" />  
-	    <property name="database" value="${database}" />
-	    <property name="dbUserDefined" value="${dbUserDefined}" />
-	    <property name="user" value="${user}" />
-	    <property name="password" value="${password}" />
+	    <property name="ip" value="${mongodb.ip}" />  
+	    <property name="port" value="${mongodb.port}" />  
+	    <property name="database" value="${mongodb.database}" />
+	    <property name="dbUserDefined" value="${mongodb.dbUserDefined}" />
+	    <property name="user" value="${mongodb.user}" />
+	    <property name="password" value="${mongodb.password}" />
 	</bean> 
     
     <bean id="redisConfig" class="com.yan.common.redis.RedisConfig">
-	    <property name="ip" value="${ip}" />  
-	    <property name="port" value="${port}" />  
+	    <property name="ip" value="${redis.ip}" />  
+	    <property name="port" value="${redis.port}" />  
 	</bean> 
 	
     <!-- service -->
