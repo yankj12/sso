@@ -33,8 +33,6 @@ public class UserAccessIntfServlet  extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		
-		HttpSession httpSession = request.getSession();
-		
 		//获取ServletContext 再获取 WebApplicationContextUtils  
         ServletContext servletContext = this.getServletContext();  
         WebApplicationContext context =   
@@ -47,7 +45,6 @@ public class UserAccessIntfServlet  extends HttpServlet {
 		String userCode = request.getParameter("userCode");
 		String pwdhash = request.getParameter("pwdhash");
 		String ticket = request.getParameter("ticket");
-		String ip = request.getRemoteAddr();
 		
 		// 定义返回
 		ResponseVo responseVo = new ResponseVo();
@@ -101,6 +98,7 @@ public class UserAccessIntfServlet  extends HttpServlet {
 			success = true;
 		}else {
 			success = false;
+			errorMsg = "找不到对应的会话";
 		}
 		responseVo.setSuccess(success);
 		responseVo.setErrorMsg(errorMsg);
