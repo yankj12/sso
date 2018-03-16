@@ -22,7 +22,7 @@ public class RedisSessionServiceImpl implements RedisSessionService{
 			
 			Map<String, String> map = jedis.hgetAll(key);
 			
-			// µ±redisÖĞÃ»ÓĞ¶ÔÓ¦µÄkeyµÄÊ±ºò£¬·µ»ØµÄmap²»Îªnull£¬¶øÊÇsizeÎª0µÄmap¶ÔÏó
+			// å½“redisä¸­æ²¡æœ‰å¯¹åº”çš„keyçš„æ—¶å€™ï¼Œè¿”å›çš„mapä¸ä¸ºnullï¼Œè€Œæ˜¯sizeä¸º0çš„mapå¯¹è±¡
 			if(map != null && map.size() > 0){
 				userMsgInfo = new UserMsgInfo();
 				
@@ -52,7 +52,7 @@ public class RedisSessionServiceImpl implements RedisSessionService{
 		try {
 			jedis = new Jedis(redisConfig.getIp(), redisConfig.getPort());
 			
-			// ÏòredisÖĞ´æUserMsgInfoµÄĞÅÏ¢
+			// å‘redisä¸­å­˜UserMsgInfoçš„ä¿¡æ¯
 			if(userMsgInfo.getUserCode() != null){
 				jedis.hset(key, "userCode", userMsgInfo.getUserCode());
 			}
@@ -69,7 +69,7 @@ public class RedisSessionServiceImpl implements RedisSessionService{
 				jedis.hset(key, "teamCode", userMsgInfo.getTeamCode());
 			}
 			
-			// ÉèÖÃÊ§Ğ§Ê±¼ä
+			// è®¾ç½®å¤±æ•ˆæ—¶é—´
 			jedis.expire(key, expireSecond);
 			
 			result = true;
